@@ -1,0 +1,58 @@
+stages:
+  - test
+  - report
+
+variables:
+  KAFKA_BROKER: "kafka:9092"
+  ALLURE_ENDPOINT: $ALLURE_TESTOPS_URL
+  ALLURE_TOKEN: $ALLURE_TESTOPS_TOKEN
+  ALLURE_PROJECT_ID: $ALLURE_PROJECT_ID
+
+.test_template:
+  image: python:3.11-slim
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+
+ui_tests:
+  stage: test
+  extends: .test_template
+  script:
+    - python -m playwright install --with-deps chromium
+    - pytest ui-tests/tests -n auto --headless --alluredir=./allure-results/ui
+  artifacts:
+    when: always
+    paths:
+      - allure-results/
+
+api_tests:
+  stage: test
+  extends: .test_template
+  services:
+    - name: confluentinc/cp-kafka:7.4.0
+      alias: kafka
+    - name: confluentinc/cp-zookeeper:7.4.0
+      alias: zookeeper
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -r requirements.txt
+    - uvicorn mock-backend.app.main:app --host 0.0.0.0 --port 8000 &
+    - sleep 5
+  script:
+    - pytest mock-backend/tests -n auto --alluredir=./allure-results/api
+  artifacts:
+    when: always
+    paths:
+      - allure-results/
+
+allure_report:
+  stage: report
+  image: frankescobar/allure-docker-service:latest
+  needs:
+    - ui_tests
+    - api_tests
+  script:
+    - allure generate allure-results -o allure-report --clean
+  artifacts:
+    paths:
+      - allure-report/
