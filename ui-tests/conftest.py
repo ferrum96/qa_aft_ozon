@@ -13,9 +13,12 @@ load_dotenv(os.path.join(os.path.dirname(ROOT), ".env"))
 
 
 @pytest.fixture(autouse=True)
-def setup_allure_metadata(request):
-    for marker in request.node.iter_markers():
-        allure.dynamic.tag(marker.name)
+def setup_reporting_metadata(request):
+    marker_names = [marker.name for marker in request.node.iter_markers()]
+    request.node.user_properties.append(("markers", ",".join(marker_names)))
+
+    for marker in marker_names:
+        allure.dynamic.tag(marker)
     allure.dynamic.title(request.node.name)
 
 

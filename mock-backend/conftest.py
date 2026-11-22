@@ -31,3 +31,9 @@ def kafka_config(kafka_topic):
         "topic": kafka_topic,
         "group.id": f"test-group-{kafka_topic}",
     }
+
+
+@pytest.fixture(autouse=True)
+def add_reportportal_markers(request):
+    marker_names = [marker.name for marker in request.node.iter_markers()]
+    request.node.user_properties.append(("markers", ",".join(marker_names)))

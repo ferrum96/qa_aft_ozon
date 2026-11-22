@@ -9,5 +9,7 @@ env/
 htmlcov/
 allure-results/
 allure-report/
+reportportal/.env
+reportportal/data/
 .DS_Store
 *.log

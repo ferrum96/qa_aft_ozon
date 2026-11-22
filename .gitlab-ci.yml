@@ -4,9 +4,10 @@ stages:
 
 variables:
   KAFKA_BROKER: "kafka:9092"
-  ALLURE_ENDPOINT: $ALLURE_TESTOPS_URL
-  ALLURE_TOKEN: $ALLURE_TESTOPS_TOKEN
-  ALLURE_PROJECT_ID: $ALLURE_PROJECT_ID
+  RP_ENDPOINT: $REPORTPORTAL_URL
+  RP_PROJECT: $REPORTPORTAL_PROJECT
+  RP_API_KEY: $REPORTPORTAL_API_KEY
+  RP_LAUNCH: "gitlab-$CI_PIPELINE_ID"
 
 .test_template:
   image: python:3.11-slim
@@ -19,7 +20,7 @@ ui_tests:
   extends: .test_template
   script:
     - python -m playwright install --with-deps chromium
-    - pytest ui-tests/tests -n auto --headless --alluredir=./allure-results/ui
+    - pytest ui-tests/tests -n auto --reportportal --alluredir=./allure-results/ui
   artifacts:
     when: always
     paths:
